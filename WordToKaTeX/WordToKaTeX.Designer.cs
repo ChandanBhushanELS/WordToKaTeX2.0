@@ -44,7 +44,11 @@
             this.isChemistry = new System.Windows.Forms.RadioButton();
             this.nonChemistry = new System.Windows.Forms.RadioButton();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.zipPathTextBox = new System.Windows.Forms.TextBox();
+            this.groupBox2 = new System.Windows.Forms.GroupBox();
+            this.groupBox3 = new System.Windows.Forms.GroupBox();
             this.groupBox1.SuspendLayout();
+            this.groupBox2.SuspendLayout();
             this.SuspendLayout();
             // 
             // inputButton
@@ -103,7 +107,7 @@
             this.statusBox.Multiline = true;
             this.statusBox.Name = "statusBox";
             this.statusBox.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-            this.statusBox.Size = new System.Drawing.Size(496, 216);
+            this.statusBox.Size = new System.Drawing.Size(496, 123);
             this.statusBox.TabIndex = 6;
             this.statusBox.WordWrap = false;
             // 
@@ -118,16 +122,17 @@
             // 
             // button2
             // 
-            this.button2.Location = new System.Drawing.Point(41, 210);
+            this.button2.Location = new System.Drawing.Point(29, 28);
             this.button2.Name = "button2";
             this.button2.Size = new System.Drawing.Size(156, 23);
             this.button2.TabIndex = 8;
             this.button2.Text = "Zip Directories";
             this.button2.UseVisualStyleBackColor = true;
+            this.button2.Click += new System.EventHandler(this.button2_Click);
             // 
             // textBox1
             // 
-            this.textBox1.Location = new System.Drawing.Point(222, 215);
+            this.textBox1.Location = new System.Drawing.Point(222, 167);
             this.textBox1.Multiline = true;
             this.textBox1.Name = "textBox1";
             this.textBox1.ScrollBars = System.Windows.Forms.ScrollBars.Both;
@@ -187,15 +192,41 @@
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "Choose Subject Type:";
             // 
+            // zipPathTextBox
+            // 
+            this.zipPathTextBox.Location = new System.Drawing.Point(210, 30);
+            this.zipPathTextBox.Name = "zipPathTextBox";
+            this.zipPathTextBox.Size = new System.Drawing.Size(496, 20);
+            this.zipPathTextBox.TabIndex = 16;
+            // 
+            // groupBox2
+            // 
+            this.groupBox2.Controls.Add(this.zipPathTextBox);
+            this.groupBox2.Controls.Add(this.button2);
+            this.groupBox2.Location = new System.Drawing.Point(12, 281);
+            this.groupBox2.Name = "groupBox2";
+            this.groupBox2.Size = new System.Drawing.Size(730, 69);
+            this.groupBox2.TabIndex = 17;
+            this.groupBox2.TabStop = false;
+            this.groupBox2.Text = "Provide the root directory path to Zip files:";
+            // 
+            // groupBox3
+            // 
+            this.groupBox3.Location = new System.Drawing.Point(16, 13);
+            this.groupBox3.Name = "groupBox3";
+            this.groupBox3.Size = new System.Drawing.Size(726, 262);
+            this.groupBox3.TabIndex = 18;
+            this.groupBox3.TabStop = false;
+            this.groupBox3.Text = "Word To KaTeX:";
+            // 
             // WordToKaTeX
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.SystemColors.ButtonFace;
-            this.ClientSize = new System.Drawing.Size(754, 387);
+            this.ClientSize = new System.Drawing.Size(754, 371);
             this.Controls.Add(this.statusLabel);
             this.Controls.Add(this.exitbutton);
-            this.Controls.Add(this.button2);
             this.Controls.Add(this.label1);
             this.Controls.Add(this.statusBox);
             this.Controls.Add(this.statusBar);
@@ -206,15 +237,21 @@
             this.Controls.Add(this.inputButton);
             this.Controls.Add(this.textBox1);
             this.Controls.Add(this.groupBox1);
+            this.Controls.Add(this.groupBox2);
+            this.Controls.Add(this.groupBox3);
             this.Cursor = System.Windows.Forms.Cursors.Hand;
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.MaximizeBox = false;
+            this.MaximumSize = new System.Drawing.Size(770, 410);
+            this.MinimumSize = new System.Drawing.Size(770, 410);
             this.Name = "WordToKaTeX";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
-            this.Text = "Word To KaTeX Converter 0.2.0.0";
+            this.Text = "Word To KaTeX Converter 0.2.1.0";
             this.Load += new System.EventHandler(this.WordToKaTeX_Load);
             this.groupBox1.ResumeLayout(false);
             this.groupBox1.PerformLayout();
+            this.groupBox2.ResumeLayout(false);
+            this.groupBox2.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -237,6 +274,9 @@
         private System.Windows.Forms.RadioButton isChemistry;
         private System.Windows.Forms.RadioButton nonChemistry;
         private System.Windows.Forms.GroupBox groupBox1;
+        private System.Windows.Forms.TextBox zipPathTextBox;
+        private System.Windows.Forms.GroupBox groupBox2;
+        private System.Windows.Forms.GroupBox groupBox3;
     }
 }
 

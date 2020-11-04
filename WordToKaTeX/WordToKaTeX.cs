@@ -1,19 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
 using System.Linq;
-using System.Text;
 using System.Windows.Forms;
 using System.IO;
-using System.IO.Compression;
 using IterateWordEquations;
 using Microsoft.Office.Interop.Word;
 using System.Diagnostics;
 using Sys = System.IO;
 using System.Text.RegularExpressions;
 using MSWord = Microsoft.Office.Interop.Word;
+using System.IO.Compression;
 
 namespace WordToKaTeX
 {
@@ -21,8 +17,7 @@ namespace WordToKaTeX
 
     public partial class WordToKaTeX : Form
     {
-        List<string> mathMLList = new List<string>();
-        List<string> KatexList = new List<string>();
+        
         string MathMLPath;
         string outputSolutionPath;
         string inputSolutionPath;
@@ -36,7 +31,7 @@ namespace WordToKaTeX
         {
             statusBox.Clear();
             ExtractMathTypes();
-
+            RefineSolutions();
             //statusBox.Clear();
             //ExtractImages();
 
@@ -48,6 +43,57 @@ namespace WordToKaTeX
 
             MessageBox.Show("Done!","Word To KaTeX 2.0");
 
+        }
+        public void RefineSolutions()
+        {
+            statusLabel.Text = "Refining Solution Files...";
+            string refineSolutionPath = outputPathTextBox.Text + @"\" + "Done Files\\";
+            DirectoryInfo di = new DirectoryInfo(refineSolutionPath);
+
+            int tFiles = di.GetFiles("*.docx", SearchOption.AllDirectories).Length;
+            //int tFiles = Directory.GetFiles(MathMLPath,".docx").Length;
+            string[] allfiles = Directory.GetFiles(refineSolutionPath, "*.docx", SearchOption.AllDirectories);
+            statusBar.Minimum = 0;
+            statusBar.Maximum = tFiles;
+            MSWord.Application app = new MSWord.Application();
+            int counter = 0;
+            foreach (string file in allfiles)
+            {
+                counter += 1;
+                statusBar.Value = counter;
+                try
+                {
+                    MSWord.Document doc = app.Documents.Open(file, ReadOnly: false);
+                    statusBox.AppendText(Path.GetFileName(file).ToString().Replace(".docx", "").ToString() + Environment.NewLine);
+                   
+                    foreach (MSWord.Section sec in doc.Sections)
+                    {
+                        foreach (MSWord.Paragraph para in sec.Range.Paragraphs)
+                        {
+                            string currLine = para.Range.Text.ToString();
+                            if(currLine.StartsWith(@"\("))
+                            {
+                                currLine = currLine.Replace(@"\(", @"\[").Replace(@"\)", @"\]");
+                                para.Range.Text = currLine;
+                                
+                            }
+                           // statusBox.AppendText(currLine + Environment.NewLine);
+                 
+                        }
+                    
+                    }
+
+                    doc.Close();
+                }
+                catch (Exception ex)
+                {
+                    //MessageBox.Show(ex.ToString());
+                    statusBox.AppendText(ex.Message.ToString() + Environment.NewLine);
+                }
+            }
+
+
+            app.Quit();
         }
         public void ExtractImages()
         {
@@ -124,6 +170,7 @@ namespace WordToKaTeX
 
         public void ExtractMathTypes()
         {
+            statusLabel.Text = "Converting MathType Equations To KaTeX...";
             inputSolutionPath = inputPathTextBox.Text + @"\";
             outputSolutionPath = outputPathTextBox.Text + @"\";
             fpath = inputSolutionPath.ToString();
@@ -153,7 +200,8 @@ namespace WordToKaTeX
                 string[] allfiles = Directory.GetFiles(MathMLPath, "*.docx", SearchOption.AllDirectories);
 
                 MSWord.Application app = new MSWord.Application();
-
+                statusBar.Maximum = tFiles;
+                statusBar.Minimum = 0;
 
                 using (StreamWriter er = new StreamWriter(logPath + "/" + "MathType-Error-Log.csv"))
                 {
@@ -167,19 +215,28 @@ namespace WordToKaTeX
                         //lr.WriteLine("------------------------------------------------------------------");
                         foreach (string file in allfiles)
                         {
+                            Console.WriteLine(Path.GetFileNameWithoutExtension(file));
+                            List<string> mathMLList = new List<string>();
+                            List<string> KatexList = new List<string>();
                             fileCounter += 1;
+                            statusBar.Value = fileCounter;
+                           // mathMLList.Clear();
                             try
                             {
                                 MSWord.Document doc = app.Documents.Open(file, ReadOnly: false);
                                 statusBox.AppendText(Path.GetFileName(file).ToString().Replace(".docx", "").ToString() + "-" + "(" + fileCounter.ToString() + " of " + tFiles.ToString() + ")" + "-");
                                 count = 0;
                                 List<MSWord.Range> ranges = new List<Microsoft.Office.Interop.Word.Range>();
+                               // ranges.Clear();
+                                
                                 foreach (MSWord.Section sec in doc.Sections)
                                 {
                                     foreach (MSWord.Paragraph para in sec.Range.Paragraphs)
                                     {
                                         foreach (InlineShape ishape in para.Range.InlineShapes)
                                         {
+                                            Boolean isMathType = false;
+                                            Boolean isDelete = false;
                                             try
                                             {
                                                 if (ishape.OLEFormat.ProgID.StartsWith("Equation."))
@@ -187,23 +244,39 @@ namespace WordToKaTeX
                                                     try
                                                     {
                                                         MathTypeEquation mobj = new MathTypeEquation(ishape.OLEFormat);
-                                                        //textBox4.AppendText(mobj.LaTeX + Environment.NewLine);
-                                                        mathMLList.Add(mobj.LaTeX);
-                                                        mobj.Dispose();
-                                                        ranges.Add(ishape.Range);
-                                                        ishape.Delete();
                                                         
+                                                        //textBox4.AppendText(mobj.LaTeX + Environment.NewLine);
+                                                      //  Console.WriteLine("Converted Latex:"+ mobj.LaTeX);
+                                                        mathMLList.Add(mobj.LaTeX);
+                                                        while(isMathType==false)
+                                                        {
+                                                           // Console.WriteLine("Math Object disposed!");
+                                                            mobj.Dispose();
+                                                            isMathType = true;
+                                                        }
+
+                                                        //Console.WriteLine("MathType Object Closeded");
+                                                        while(isMathType == true && isDelete == false)
+                                                        {
+                                                            ranges.Add(ishape.Range);
+                                                            ishape.Delete();
+                                                            //Console.WriteLine("ishape deleted.");
+                                                            isDelete = true;
+                                                        }
+
+                                                       // Console.WriteLine("isMathType: " + isMathType.ToString() + Environment.NewLine + "isDeleted: " + isDelete.ToString() + Environment.NewLine);
                                                         count++;
                                                     }
                                                     catch (NullReferenceException exce)
                                                     {
 
-                                                        Console.WriteLine(exce.Message);
+                                                        //Console.WriteLine(exce.Message);
                                                         continue;
                                                     }
                                                     catch (Exception ex)
                                                     {
-                                                        MessageBox.Show(ex.ToString() + Environment.NewLine + count.ToString());
+                                                        //Console.WriteLine(ex.ToString());
+                                                       // MessageBox.Show(ex.ToString() + Environment.NewLine + count.ToString());
                                                     }
                                                 }
                                             }
@@ -221,9 +294,9 @@ namespace WordToKaTeX
                                         }
 
                                     }
-
+                                    
                                     foreach (Process process in Process.GetProcessesByName("MathType"))
-                                    {
+                                    {                                                                          
                                         process.Kill();
                                     }
                                 }
@@ -268,7 +341,7 @@ namespace WordToKaTeX
 
                                         //textBox3.AppendText(citem.Substring(0,2) + "-" + citem.Substring(citem.Length-2,2) + Environment.NewLine);
                                         //.Replace(" ", "")
-                                        citem = citem.Replace(@"{\rm E}", @"\Epsilon").Replace(@"\varepsilon", @"\epsilon").Replace(@"\ne", @"\ne ").Replace(@"\le", @"\le ").Replace("le ft", "left").Replace(@"\approx", @"&\approx ").Replace(@"\partial", @"\partial ").Replace("cdot", "cdot ").Replace("cdot s", "cdots").Replace(@"\Delta", @"\Delta ").Replace(@"\delta", @"\delta ").Replace(@"%", @"\%").Replace(@"\ \ \ \ \ \ \ \ \ \ \ \ \ \ \", " ");
+                                        citem = citem.Replace(@"{\rm E}", @"\Epsilon").Replace(@"\varepsilon", @"\epsilon").Replace(@"\ne", @"\ne ").Replace(@"\ne g", @"\neg ").Replace(@"\le", @"\le ").Replace("le ft", "left").Replace(@"\approx", @"&\approx ").Replace(@"\partial", @"\partial ").Replace("cdot", "cdot ").Replace("cdot s", "cdots").Replace(@"\Delta", @"\Delta ").Replace(@"\delta", @"\delta ").Replace(@"%", @"\%").Replace(@"\ \ \ \ \ \ \ \ \ \ \ \ \ \ \", " ");
 
                                         string tempStr = citem.Replace(@"\(", "").Replace(@"\)", "");
                                         Regex reg = new Regex(@"\(([^)]+)\)*");
@@ -293,14 +366,19 @@ namespace WordToKaTeX
                                         //{
                                         //    citem = citem.Replace(citem.Substring(citem.Length - 1, 1), @"\)");
                                         //}
-                                        citem = citem.Replace(@"\cdot", @"\cdot ").Replace(@"\cdot s", @"\cdots").Replace(@"&&\\", @"\\");
+                                        citem = citem.Replace(@"\cdot", @"\cdot ").Replace(@"\cdot s", @"\cdots").Replace(@"&&\\", @"\\").Replace(@"\ne g", @"\neg ");
 
-                                        KatexList.Add(citem);
+                                    if (isChemistry.Checked)
+                                    {
+                                        citem = citem.Replace(@"\Xi", @"\overrightharpoon{\,_\leftharpoondown}");
+                                    }
+
+                                    KatexList.Add(citem);
                                        // wr.WriteLine(citem);
                                     }
                                    // wr.Close();
                                // }
-                                mathMLList.Clear();
+                               // mathMLList.Clear();
 
                                 //---------------
                                 int mcount = 0;
@@ -309,19 +387,28 @@ namespace WordToKaTeX
 
                                     // replace image with image
                                     // r.InlineShapes.AddPicture(@"D:\New folder\img1.jpg", ref missing, ref missing, ref missing);
-                                    // replace image with text    
+                                    // replace image with text
+                                    //string rlen = r.Text.ToString();
+                                    //statusBox.AppendText(rlen + Environment.NewLine);
                                     r.Text = KatexList[mcount].ToString();
+                                    
                                     mcount++;
                                 }
 
 
                                 lr.WriteLine(Path.GetFileName(file).ToString().Replace(".docx", "") + "," + count.ToString() + " MathType(s) Converted.");
-                                statusBox.AppendText(count.ToString() + " MathTypes Converted." + Environment.NewLine);
+                                statusBox.AppendText(count.ToString() + " MathType(s) Converted." + Environment.NewLine);
 
 
+                                string tempPath = outputSolutionPath + "Done Files\\";
 
-                                doc.SaveAs2(outputSolutionPath + "Done Files\\" + Path.GetFileName(file));
+                                string tempFilePath = tempPath + Path.GetFileName(Path.GetDirectoryName(file));
+                                if (!Directory.Exists(tempFilePath))
+                                    Directory.CreateDirectory(tempFilePath);
+
+                                doc.SaveAs2(tempFilePath + @"\" + Path.GetFileName(file));
                                 doc.Close();
+                                
                             }
                             catch (Exception ex)
                             {
@@ -362,6 +449,44 @@ namespace WordToKaTeX
         {
             statusLabel.Text = "";
             nonChemistry.Checked = true;
+            statusBox.Clear();
+            
+        }
+
+        private void button2_Click(object sender, EventArgs e)
+        {
+            statusBox.Clear();
+            statusLabel.Text = "Zipping directories....";
+            string fpath = zipPathTextBox.Text;
+            string[] subdirectoryEntries = Directory.GetDirectories(fpath);
+            int dirCount = subdirectoryEntries.Length;
+            statusBar.Minimum = 0;
+            statusBar.Maximum = dirCount;
+            int dirCounter = 0;
+            foreach (string subdirectory in subdirectoryEntries)
+            {
+                dirCounter += 1;
+                statusBar.Value = dirCounter;
+                string startPath = subdirectory;
+                string zipPath = subdirectory + ".zip";//URL for your ZIP file
+                
+                try
+                {
+                    ZipFile.CreateFromDirectory(startPath, zipPath);
+                }
+                catch (System.IO.IOException )
+                {
+                    continue;
+                   
+                }
+                //statusBox.AppendText(Path.GetFileName(subdirectory) + ": File(s) open in this directory. Retry after closing the file(s)." + Environment.NewLine);
+
+
+                // ZipFile.CreateFromDirectory(startPath, zipPath, CompressionLevel.Fastest, true);
+                //int count = Directory.GetFiles(subdirectory, "*.docx", SearchOption.AllDirectories).Length;
+                statusBox.AppendText(Path.GetFileName(subdirectory) + Environment.NewLine);
+            }
+            MessageBox.Show("Zipping Done!");
         }
     }
 }

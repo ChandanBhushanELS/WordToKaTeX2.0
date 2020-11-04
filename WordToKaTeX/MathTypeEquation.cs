@@ -175,6 +175,8 @@ namespace IterateWordEquations
         public void Dispose()
         {
             oleObject.Close((uint)OLECLOSE.OLECLOSE_SAVEIFDIRTY);
+           // Console.WriteLine("MathType Object Disposed!");
+            
         }
         #endregion IDisposable implementation
 
