@@ -47,6 +47,7 @@ namespace WordToKaTeX
         public void RefineSolutions()
         {
             statusLabel.Text = "Refining Solution Files...";
+            statusBox.Clear();
             string refineSolutionPath = outputPathTextBox.Text + @"\" + "Done Files\\";
             DirectoryInfo di = new DirectoryInfo(refineSolutionPath);
 
@@ -71,14 +72,26 @@ namespace WordToKaTeX
                         foreach (MSWord.Paragraph para in sec.Range.Paragraphs)
                         {
                             string currLine = para.Range.Text.ToString();
-                            if(currLine.StartsWith(@"\("))
+
+                            if (currLine.StartsWith(@" \("))
                             {
-                                currLine = currLine.Replace(@"\(", @"\[").Replace(@"\)", @"\]");
+                                currLine = currLine.Replace(@" \(", @"\[").Replace(@"\) ", @"\]");
                                 para.Range.Text = currLine;
-                                
                             }
-                           // statusBox.AppendText(currLine + Environment.NewLine);
-                 
+                            //if (currLine.Contains(@"  \("))
+                            //{
+                            //    currLine.Replace(@"  \(", @" \(");
+                            //    para.Range.Text = currLine;
+                            //}
+                            //else if(currLine.Contains(@"\("))
+                            //{
+                            //    currLine = currLine.Replace(@"\(", @" \(").Replace(@"\)", @"\) ");
+                            //    currLine = currLine.Replace(@"  \(", @" \(").Replace(@"\)  ", @"\) ");
+                            //    para.Range.Text = currLine;
+                            //}
+                            
+                            // statusBox.AppendText(currLine + Environment.NewLine);
+
                         }
                     
                     }
@@ -365,15 +378,16 @@ namespace WordToKaTeX
                                         //if (citem.Substring(citem.Length - 1, 1) == "$")
                                         //{
                                         //    citem = citem.Replace(citem.Substring(citem.Length - 1, 1), @"\)");
-                                        //}
-                                        citem = citem.Replace(@"\cdot", @"\cdot ").Replace(@"\cdot s", @"\cdots").Replace(@"&&\\", @"\\").Replace(@"\ne g", @"\neg ");
+                                        //} //.Replace(@"\cdot", @"\cdot ")
+                                        citem = citem.Replace(@"\cdot s", @"\cdots").Replace(@"&&\\", @"\\").Replace(@"\ne g", @"\neg ");
+                                        citem = citem.Replace("cdot  ", "cdot ");
 
-                                    if (isChemistry.Checked)
-                                    {
-                                        citem = citem.Replace(@"\Xi", @"\overrightharpoon{\,_\leftharpoondown}");
-                                    }
+                                        if (isChemistry.Checked)
+                                        {
+                                            citem = citem.Replace(@"\Xi", @"\overrightharpoon{\,_\leftharpoondown}");
+                                        }
 
-                                    KatexList.Add(citem);
+                                        KatexList.Add(citem);
                                        // wr.WriteLine(citem);
                                     }
                                    // wr.Close();
@@ -390,7 +404,7 @@ namespace WordToKaTeX
                                     // replace image with text
                                     //string rlen = r.Text.ToString();
                                     //statusBox.AppendText(rlen + Environment.NewLine);
-                                    r.Text = KatexList[mcount].ToString();
+                                    r.Text = " " + KatexList[mcount].ToString();
                                     
                                     mcount++;
                                 }
