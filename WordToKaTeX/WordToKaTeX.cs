@@ -22,6 +22,8 @@ namespace WordToKaTeX
         string outputSolutionPath;
         string inputSolutionPath;
         string fpath;
+        public static readonly List<string> ImageExtensions = new List<string> { ".JPG", ".JPE", ".BMP", ".GIF", ".PNG", ".JPEG", ".CDR", ".SVG" };
+
         public WordToKaTeX()
         {
             InitializeComponent();
@@ -32,6 +34,7 @@ namespace WordToKaTeX
             statusBox.Clear();
             ExtractMathTypes();
             RefineSolutions();
+            moveImages();
             //statusBox.Clear();
             //ExtractImages();
 
@@ -44,6 +47,46 @@ namespace WordToKaTeX
             MessageBox.Show("Done!","Word To KaTeX 2.0");
 
         }
+        public void moveImages()
+        {
+            string inputPath = inputPathTextBox.Text + @"\"; //@"D:\New Katex Issue\atul\imageissue";
+            string outputPath = outputPathTextBox.Text + @"\" + "Done Files\\"; //@"D:\New Katex Issue\atul\output";
+
+            string[] allfiles = Directory.GetFiles(inputPath, "*.*", SearchOption.AllDirectories);
+
+            foreach (string fileName in allfiles)
+            {
+                string currFileName = Path.GetFileName(fileName);
+
+                if (!currFileName.Contains(".docx"))
+                {
+                    if (ImageExtensions.Contains(Path.GetExtension(currFileName).ToUpperInvariant()))
+                    {
+                        // string tempPath = outputPath + "Done Files\\";
+
+                        string tempFilePath = outputPath + Path.GetFileName(Path.GetDirectoryName(Path.GetDirectoryName(fileName))) + @"\" + Path.GetFileName(Path.GetDirectoryName(fileName));
+
+                        if (!Directory.Exists(tempFilePath))
+                            Directory.CreateDirectory(tempFilePath);
+
+                        File.Copy(fileName, tempFilePath + @"\" + currFileName);
+                        //string tempPath = Path.GetPathRoot( Path.GetFileName(Path.GetDirectoryName(fileName)));
+                       // textBox1.AppendText(tempFilePath + @"\" + currFileName + Environment.NewLine);
+                    }
+                    else
+                    {
+                        string tempFilePath = outputPath + Path.GetFileName(Path.GetDirectoryName(fileName));
+
+                        if (!Directory.Exists(tempFilePath))
+                            Directory.CreateDirectory(tempFilePath);
+                        File.Copy(fileName, tempFilePath + @"\" + currFileName);
+
+                       // textBox1.AppendText(tempFilePath + @"\" + currFileName + Environment.NewLine);
+                    }
+                }
+            }
+        }
+
         public void RefineSolutions()
         {
             statusLabel.Text = "Refining Solution Files...";
@@ -75,9 +118,10 @@ namespace WordToKaTeX
 
                             if (currLine.StartsWith(@" \("))
                             {
-                                currLine = currLine.Replace(@" \(", @"\[").Replace(@"\) ", @"\]");
+                                currLine = currLine.Replace(@" \(", @"\[").Replace(@"\) ", @"\]").Replace(@"\)",@"\]");
                                 para.Range.Text = currLine;
                             }
+
                             //if (currLine.Contains(@"  \("))
                             //{
                             //    currLine.Replace(@"  \(", @" \(");
