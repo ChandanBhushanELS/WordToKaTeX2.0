@@ -29,6 +29,8 @@
         private void InitializeComponent()
         {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(WordToKaTeX));
+            this.inputButton = new System.Windows.Forms.Button();
+            this.OutputButton = new System.Windows.Forms.Button();
             this.inputPathTextBox = new System.Windows.Forms.TextBox();
             this.outputPathTextBox = new System.Windows.Forms.TextBox();
             this.ConvertButton = new System.Windows.Forms.Button();
@@ -45,12 +47,27 @@
             this.zipPathTextBox = new System.Windows.Forms.TextBox();
             this.groupBox2 = new System.Windows.Forms.GroupBox();
             this.groupBox3 = new System.Windows.Forms.GroupBox();
-            this.label2 = new System.Windows.Forms.Label();
-            this.label3 = new System.Windows.Forms.Label();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
-            this.groupBox3.SuspendLayout();
             this.SuspendLayout();
+            // 
+            // inputButton
+            // 
+            this.inputButton.Location = new System.Drawing.Point(41, 32);
+            this.inputButton.Name = "inputButton";
+            this.inputButton.Size = new System.Drawing.Size(156, 23);
+            this.inputButton.TabIndex = 0;
+            this.inputButton.Text = "Input Path";
+            this.inputButton.UseVisualStyleBackColor = true;
+            // 
+            // OutputButton
+            // 
+            this.OutputButton.Location = new System.Drawing.Point(41, 61);
+            this.OutputButton.Name = "OutputButton";
+            this.OutputButton.Size = new System.Drawing.Size(156, 23);
+            this.OutputButton.TabIndex = 1;
+            this.OutputButton.Text = "Output Path";
+            this.OutputButton.UseVisualStyleBackColor = true;
             // 
             // inputPathTextBox
             // 
@@ -195,32 +212,12 @@
             // 
             // groupBox3
             // 
-            this.groupBox3.Controls.Add(this.label3);
-            this.groupBox3.Controls.Add(this.label2);
             this.groupBox3.Location = new System.Drawing.Point(16, 13);
             this.groupBox3.Name = "groupBox3";
             this.groupBox3.Size = new System.Drawing.Size(726, 262);
             this.groupBox3.TabIndex = 18;
             this.groupBox3.TabStop = false;
             this.groupBox3.Text = "Word To KaTeX:";
-            // 
-            // label2
-            // 
-            this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(44, 24);
-            this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(59, 13);
-            this.label2.TabIndex = 0;
-            this.label2.Text = "Input Path:";
-            // 
-            // label3
-            // 
-            this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(44, 53);
-            this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(67, 13);
-            this.label3.TabIndex = 1;
-            this.label3.Text = "Output Path:";
             // 
             // WordToKaTeX
             // 
@@ -236,6 +233,8 @@
             this.Controls.Add(this.ConvertButton);
             this.Controls.Add(this.outputPathTextBox);
             this.Controls.Add(this.inputPathTextBox);
+            this.Controls.Add(this.OutputButton);
+            this.Controls.Add(this.inputButton);
             this.Controls.Add(this.textBox1);
             this.Controls.Add(this.groupBox1);
             this.Controls.Add(this.groupBox2);
@@ -247,20 +246,21 @@
             this.MinimumSize = new System.Drawing.Size(770, 410);
             this.Name = "WordToKaTeX";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
-            this.Text = "Word To KaTeX Converter 0.2.1.1";
+            this.Text = "Word To KaTeX Converter 0.3.0.1";
             this.Load += new System.EventHandler(this.WordToKaTeX_Load);
             this.groupBox1.ResumeLayout(false);
             this.groupBox1.PerformLayout();
             this.groupBox2.ResumeLayout(false);
             this.groupBox2.PerformLayout();
-            this.groupBox3.ResumeLayout(false);
-            this.groupBox3.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
         }
 
         #endregion
+
+        private System.Windows.Forms.Button inputButton;
+        private System.Windows.Forms.Button OutputButton;
         private System.Windows.Forms.TextBox inputPathTextBox;
         private System.Windows.Forms.TextBox outputPathTextBox;
         private System.Windows.Forms.Button ConvertButton;
@@ -277,8 +277,6 @@
         private System.Windows.Forms.TextBox zipPathTextBox;
         private System.Windows.Forms.GroupBox groupBox2;
         private System.Windows.Forms.GroupBox groupBox3;
-        private System.Windows.Forms.Label label3;
-        private System.Windows.Forms.Label label2;
     }
 }
 

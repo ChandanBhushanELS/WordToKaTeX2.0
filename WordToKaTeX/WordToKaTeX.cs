@@ -22,8 +22,6 @@ namespace WordToKaTeX
         string outputSolutionPath;
         string inputSolutionPath;
         string fpath;
-        public static readonly List<string> ImageExtensions = new List<string> { ".JPG", ".JPE", ".BMP", ".GIF", ".PNG", ".JPEG", ".CDR", ".SVG" };
-
         public WordToKaTeX()
         {
             InitializeComponent();
@@ -34,7 +32,6 @@ namespace WordToKaTeX
             statusBox.Clear();
             ExtractMathTypes();
             RefineSolutions();
-            moveImages();
             //statusBox.Clear();
             //ExtractImages();
 
@@ -47,50 +44,34 @@ namespace WordToKaTeX
             MessageBox.Show("Done!","Word To KaTeX 2.0");
 
         }
-        public void moveImages()
+
+        private void FindAndReplace(Microsoft.Office.Interop.Word.Application doc, object findText, object replaceWithText)
         {
-            string inputPath = inputPathTextBox.Text + @"\"; //@"D:\New Katex Issue\atul\imageissue";
-            string outputPath = outputPathTextBox.Text + @"\" + "Done Files\\"; //@"D:\New Katex Issue\atul\output";
-
-            string[] allfiles = Directory.GetFiles(inputPath, "*.*", SearchOption.AllDirectories);
-
-            foreach (string fileName in allfiles)
-            {
-                string currFileName = Path.GetFileName(fileName);
-
-                if (!currFileName.Contains(".docx"))
-                {
-                    if (ImageExtensions.Contains(Path.GetExtension(currFileName).ToUpperInvariant()))
-                    {
-                        // string tempPath = outputPath + "Done Files\\";
-
-                        string tempFilePath = outputPath + Path.GetFileName(Path.GetDirectoryName(Path.GetDirectoryName(fileName))) + @"\" + Path.GetFileName(Path.GetDirectoryName(fileName));
-
-                        if (!Directory.Exists(tempFilePath))
-                            Directory.CreateDirectory(tempFilePath);
-
-                        File.Copy(fileName, tempFilePath + @"\" + currFileName);
-                        //string tempPath = Path.GetPathRoot( Path.GetFileName(Path.GetDirectoryName(fileName)));
-                       // textBox1.AppendText(tempFilePath + @"\" + currFileName + Environment.NewLine);
-                    }
-                    else
-                    {
-                        string tempFilePath = outputPath + Path.GetFileName(Path.GetDirectoryName(fileName));
-
-                        if (!Directory.Exists(tempFilePath))
-                            Directory.CreateDirectory(tempFilePath);
-                        File.Copy(fileName, tempFilePath + @"\" + currFileName);
-
-                       // textBox1.AppendText(tempFilePath + @"\" + currFileName + Environment.NewLine);
-                    }
-                }
-            }
+            //options
+            object matchCase = false;
+            object matchWholeWord = true;
+            object matchWildCards = false;
+            object matchSoundsLike = false;
+            object matchAllWordForms = false;
+            object forward = true;
+            object format = false;
+            object matchKashida = false;
+            object matchDiacritics = false;
+            object matchAlefHamza = false;
+            object matchControl = false;
+            object read_only = false;
+            object visible = true;
+            object replace = 2;
+            object wrap = 1;
+            //execute find and replace
+            doc.Selection.Find.Execute(ref findText, ref matchCase, ref matchWholeWord,
+                ref matchWildCards, ref matchSoundsLike, ref matchAllWordForms, ref forward, ref wrap, ref format, ref replaceWithText, ref replace,
+                ref matchKashida, ref matchDiacritics, ref matchAlefHamza, ref matchControl);
         }
 
         public void RefineSolutions()
         {
             statusLabel.Text = "Refining Solution Files...";
-            statusBox.Clear();
             string refineSolutionPath = outputPathTextBox.Text + @"\" + "Done Files\\";
             DirectoryInfo di = new DirectoryInfo(refineSolutionPath);
 
@@ -99,7 +80,7 @@ namespace WordToKaTeX
             string[] allfiles = Directory.GetFiles(refineSolutionPath, "*.docx", SearchOption.AllDirectories);
             statusBar.Minimum = 0;
             statusBar.Maximum = tFiles;
-            MSWord.Application app = new MSWord.Application();
+           // MSWord.Application app = new MSWord.Application();
             int counter = 0;
             foreach (string file in allfiles)
             {
@@ -107,7 +88,11 @@ namespace WordToKaTeX
                 statusBar.Value = counter;
                 try
                 {
-                    MSWord.Document doc = app.Documents.Open(file, ReadOnly: false);
+                    MSWord.Application wordApp = new MSWord.Application { Visible = false };
+                    MSWord.Document doc = wordApp.Documents.Open(file, ReadOnly: false, Visible: false);
+                    doc.Activate();
+                    // MSWord.Application app = new MSWord.Application();
+                    //MSWord.Document doc = app.Documents.Open(file, ReadOnly: false);
                     statusBox.AppendText(Path.GetFileName(file).ToString().Replace(".docx", "").ToString() + Environment.NewLine);
                    
                     foreach (MSWord.Section sec in doc.Sections)
@@ -115,42 +100,38 @@ namespace WordToKaTeX
                         foreach (MSWord.Paragraph para in sec.Range.Paragraphs)
                         {
                             string currLine = para.Range.Text.ToString();
-
-                            if (currLine.StartsWith(@" \("))
+                            if(currLine.StartsWith(@"\("))
                             {
-                                currLine = currLine.Replace(@" \(", @"\[").Replace(@"\) ", @"\]").Replace(@"\)",@"\]");
+                                currLine = currLine.Replace(@"\(", @"\[").Replace(@"\)", @"\]");
                                 para.Range.Text = currLine;
+                                
                             }
-
-                            //if (currLine.Contains(@"  \("))
-                            //{
-                            //    currLine.Replace(@"  \(", @" \(");
-                            //    para.Range.Text = currLine;
-                            //}
-                            //else if(currLine.Contains(@"\("))
-                            //{
-                            //    currLine = currLine.Replace(@"\(", @" \(").Replace(@"\)", @"\) ");
-                            //    currLine = currLine.Replace(@"  \(", @" \(").Replace(@"\)  ", @"\) ");
-                            //    para.Range.Text = currLine;
-                            //}
                             
-                            // statusBox.AppendText(currLine + Environment.NewLine);
-
+                 
                         }
                     
                     }
 
+                    FindAndReplace(wordApp, @"\(", @" \(");
+                    FindAndReplace(wordApp, @"\)", @"\) ");
+                    FindAndReplace(wordApp, @"\]", @"\] ");
+                    FindAndReplace(wordApp, "  ", " ");
+                    FindAndReplace(wordApp, " ,", ",");
+                    FindAndReplace(wordApp, " .", ".");
+                    FindAndReplace(wordApp, " ;", ";");
                     doc.Close();
+                    wordApp.Quit();
                 }
                 catch (Exception ex)
                 {
                     //MessageBox.Show(ex.ToString());
                     statusBox.AppendText(ex.Message.ToString() + Environment.NewLine);
                 }
+                
             }
 
-
-            app.Quit();
+            
+            //app.Quit();
         }
         public void ExtractImages()
         {
@@ -386,11 +367,17 @@ namespace WordToKaTeX
                                             er.WriteLine("WARNING! - " + Path.GetFileName(file).ToString() + ": Check if the matrix at index " + (mathMLList.IndexOf(item) + 1).ToString() + " in the solution file contains any verticle line or horizontal line in it. Please use the matrix guidelines for KaTeX to resolve the issue");
                                         }
 
+                                        if(citem.Contains(@"\begin{array}"))
+                                        {
+                                            citem = citem.Replace(@"{*{35}{l}}", "{cccccc}").Replace("  ", "&").Replace(@"&\\\", @"\\\").Replace(@"{cccccc}&", @"{cccccc}");
+                                        }
+
                                         if (citem.ToString().Contains("aligned"))
                                         {
+                                            citem = citem.Replace(@"\approx", @"&\approx ");
                                             //do nothing
                                             //citem = citem.Replace(").Replace(@"\ne", @"&\ne ");
-                                        }
+                                    }
                                         else
                                         {
                                             citem = citem.Replace("&=", "=").Replace(@"&\ne", @"\ne");
@@ -398,15 +385,17 @@ namespace WordToKaTeX
 
                                         //textBox3.AppendText(citem.Substring(0,2) + "-" + citem.Substring(citem.Length-2,2) + Environment.NewLine);
                                         //.Replace(" ", "")
-                                        citem = citem.Replace(@"{\rm E}", @"\Epsilon").Replace(@"\varepsilon", @"\epsilon").Replace(@"\ne", @"\ne ").Replace(@"\ne g", @"\neg ").Replace(@"\le", @"\le ").Replace("le ft", "left").Replace(@"\approx", @"&\approx ").Replace(@"\partial", @"\partial ").Replace("cdot", "cdot ").Replace("cdot s", "cdots").Replace(@"\Delta", @"\Delta ").Replace(@"\delta", @"\delta ").Replace(@"%", @"\%").Replace(@"\ \ \ \ \ \ \ \ \ \ \ \ \ \ \", " ");
+                                        citem = citem.Replace(@"{\rm E}", @"\Epsilon").Replace(@"\varepsilon", @"\epsilon").Replace(@"\ne", @"\ne ").Replace(@"\ne g", @"\neg ").Replace(@"\le", @"\le ").Replace("le ft", "left").Replace(@"\partial", @"\partial ").Replace("cdot", "cdot ").Replace("cdot s", "cdots").Replace(@"\Delta", @"\Delta ").Replace(@"\delta", @"\delta ").Replace(@"%", @"\%").Replace(@"\ \ \ \ \ \ \ \ \ \ \ \ \ \ \", " ");
 
                                         string tempStr = citem.Replace(@"\(", "").Replace(@"\)", "");
+
                                         Regex reg = new Regex(@"\(([^)]+)\)*");
                                         foreach (Match ItemMatch in reg.Matches(tempStr))
                                         {
                                             string temp = ItemMatch.Value.Replace("&=", "=");
                                             citem = citem.Replace(ItemMatch.Value, temp);
                                         }
+
                                         Regex reg1 = new Regex(@"\{([^)]+)\}}*");
                                         foreach (Match ItemMatch in reg.Matches(tempStr))
                                         {
@@ -422,16 +411,15 @@ namespace WordToKaTeX
                                         //if (citem.Substring(citem.Length - 1, 1) == "$")
                                         //{
                                         //    citem = citem.Replace(citem.Substring(citem.Length - 1, 1), @"\)");
-                                        //} //.Replace(@"\cdot", @"\cdot ")
-                                        citem = citem.Replace(@"\cdot s", @"\cdots").Replace(@"&&\\", @"\\").Replace(@"\ne g", @"\neg ");
-                                        citem = citem.Replace("cdot  ", "cdot ");
+                                        //}
+                                        citem = citem.Replace(@"\cdot", @"\cdot ").Replace(@"\cdot s", @"\cdots").Replace(@"&&\\", @"\\").Replace(@"\ne g", @"\neg ");
 
-                                        if (isChemistry.Checked)
-                                        {
-                                            citem = citem.Replace(@"\Xi", @"\overrightharpoon{\,_\leftharpoondown}");
-                                        }
-
-                                        KatexList.Add(citem);
+                                    if (isChemistry.Checked)
+                                    {
+                                        citem = citem.Replace(@"\Xi", @"\overrightharpoon{\,_\leftharpoondown}");
+                                    }
+                                    citem = citem.Trim();
+                                    KatexList.Add(citem);
                                        // wr.WriteLine(citem);
                                     }
                                    // wr.Close();
@@ -448,7 +436,8 @@ namespace WordToKaTeX
                                     // replace image with text
                                     //string rlen = r.Text.ToString();
                                     //statusBox.AppendText(rlen + Environment.NewLine);
-                                    r.Text = " " + KatexList[mcount].ToString();
+                                   
+                                    r.Text = KatexList[mcount].ToString();
                                     
                                     mcount++;
                                 }
